@@ -8,7 +8,7 @@ const links = [
 ]
 
 export default function Layout() {
-  const { session, signOut } = useAuth()
+  const { usuario, signOut, modoLocal } = useAuth()
   const navigate = useNavigate()
 
   const salir = async () => {
@@ -54,8 +54,13 @@ export default function Layout() {
           </nav>
 
           <div className="flex items-center gap-3">
+            {modoLocal && (
+              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+                Modo local
+              </span>
+            )}
             <span className="hidden text-xs text-slate-400 sm:inline">
-              {session?.user.email}
+              {usuario?.email}
             </span>
             <button
               onClick={salir}

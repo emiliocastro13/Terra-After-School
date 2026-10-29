@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { data } from '../lib/data'
 import type { Padre, TipoContacto } from '../lib/types'
 import { DEPORTES } from '../lib/constants'
 import { hoyISO } from '../lib/format'
@@ -61,54 +61,41 @@ export default function ConvertirModal({
     }
     setGuardando(true)
 
-    // 1) Crear (o reutilizar) el perfil del alumno
-    const { data: alumno, error: errAlumno } = await supabase
-      .from('alumnos')
-      .insert({
+    try {
+      // 1) Crear el perfil del alumno
+      const alumno = await data.createAlumno({
         padre_id: lead.id,
         nombre: nombreNino.trim(),
         fecha_nacimiento: fechaNacimiento || null,
         tipo,
         grado_terranova: grado.trim() || null,
       })
-      .select()
-      .single()
 
-    if (errAlumno || !alumno) {
-      setGuardando(false)
-      setError(errAlumno?.message ?? 'No se pudo crear el alumno.')
-      return
-    }
+      // 2) Crear la inscripción al deporte
+      await data.createInscripcion({
+        alumno_id: alumno.id,
+        deporte,
+        fecha_clase_muestra: fechaClaseMuestra || null,
+        fecha_inscripcion: fechaInscripcion || null,
+        fecha_inicio_mensualidad: fechaInicioMensualidad || null,
+        dia_corte: diaCorte ? Number(diaCorte) : null,
+        monto_mensualidad: montoMensualidad ? Number(montoMensualidad) : null,
+        monto_inscripcion: montoInscripcion ? Number(montoInscripcion) : null,
+        estado: 'activo',
+      })
 
-    // 2) Crear la inscripción al deporte
-    const { error: errInsc } = await supabase.from('inscripciones').insert({
-      alumno_id: alumno.id,
-      deporte,
-      fecha_clase_muestra: fechaClaseMuestra || null,
-      fecha_inscripcion: fechaInscripcion || null,
-      fecha_inicio_mensualidad: fechaInicioMensualidad || null,
-      dia_corte: diaCorte ? Number(diaCorte) : null,
-      monto_mensualidad: montoMensualidad ? Number(montoMensualidad) : null,
-      monto_inscripcion: montoInscripcion ? Number(montoInscripcion) : null,
-      estado: 'activo',
-    })
-
-    if (errInsc) {
-      setGuardando(false)
-      setError(errInsc.message)
-      return
-    }
-
-    // 3) Marcar el lead como inscrito
-    await supabase
-      .from('padres')
-      .update({
+      // 3) Marcar el lead como inscrito
+      await data.updatePadre(lead.id, {
         etapa: 'inscrito',
         nombre_nino: nombreNino.trim(),
         fecha_inscripcion: fechaInscripcion || null,
         fecha_clase_muestra: fechaClaseMuestra || null,
       })
-      .eq('id', lead.id)
+    } catch (e) {
+      setGuardando(false)
+      setError((e as Error).message)
+      return
+    }
 
     setGuardando(false)
     onConvertido()

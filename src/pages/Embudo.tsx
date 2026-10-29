@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { data } from '../lib/data'
 import type { EtapaEmbudo, Padre } from '../lib/types'
 import { DEPORTES, ETAPAS, etapaColor, tipoLabel } from '../lib/constants'
 import { fmtFecha } from '../lib/format'
@@ -23,12 +23,12 @@ export default function Embudo() {
 
   const cargar = async () => {
     setCargando(true)
-    const { data, error } = await supabase
-      .from('padres')
-      .select('*')
-      .order('created_at', { ascending: false })
-    if (error) setError(error.message)
-    else setPadres(data as Padre[])
+    try {
+      setPadres(await data.listPadres())
+      setError(null)
+    } catch (e) {
+      setError((e as Error).message)
+    }
     setCargando(false)
   }
 
@@ -53,7 +53,7 @@ export default function Embudo() {
 
   const moverEtapa = async (p: Padre, etapa: EtapaEmbudo) => {
     setPadres((prev) => prev.map((x) => (x.id === p.id ? { ...x, etapa } : x)))
-    await supabase.from('padres').update({ etapa }).eq('id', p.id)
+    await data.updatePadre(p.id, { etapa })
   }
 
   const nuevoLead = () => {

@@ -40,7 +40,25 @@ Mismo patrón que las otras apps: **Supabase** (base de datos + autenticación) 
 
 ---
 
-## 🚀 Puesta en marcha
+## 🖥️ Modo local (sin Supabase) — para construir y probar ya
+
+Mientras decides el plan de Supabase, la app corre **100% en local** guardando los
+datos en el navegador (`localStorage`). No necesitas base de datos en la nube.
+
+```bash
+npm install
+npm run dev        # abre http://localhost:5173
+```
+- Si **no** existe `.env.local`, la app arranca en **Modo local** (verás el badge
+  amarillo) con unos **datos de ejemplo** para que veas el flujo completo.
+- Entra con **cualquier correo** (no pide contraseña en local).
+- Todo lo que captures se guarda en ese navegador.
+
+> ⚠️ El modo local es para desarrollo/pruebas: los datos viven solo en tu
+> navegador y no se comparten entre personas. Para lanzarlo al equipo, conecta
+> Supabase (abajo) — **no hay que cambiar código, solo agregar el `.env.local`**.
+
+## 🚀 Pasar a producción con Supabase
 
 ### 1. Crear el proyecto en Supabase
 1. Entra a [supabase.com](https://supabase.com) → **New project**.
@@ -57,13 +75,13 @@ para ti, el encargado de extracurriculares y los maestros de cada deporte.
 > En esta primera fase cualquier usuario autenticado tiene acceso completo.
 > La fase para papás (solo-lectura de su información) se afinará después con roles.
 
-### 3. Correr en local
+### 3. Conectar la app a Supabase
 ```bash
 cp .env.example .env.local   # y rellena tus llaves de Supabase
-npm install
 npm run dev
 ```
-Abre http://localhost:5173
+Al existir `.env.local` con las llaves, la app deja el modo local y usa Supabase
+automáticamente (login real + datos compartidos en la nube).
 
 ### 4. Desplegar en Vercel
 1. Importa el repo en [vercel.com](https://vercel.com) (framework detectado: **Vite**).
@@ -78,11 +96,19 @@ Abre http://localhost:5173
 ```
 supabase/migrations/0001_init.sql   Esquema de la base de datos
 src/
-  lib/            cliente supabase, tipos, constantes, utilidades
-  context/        AuthContext (sesión de Supabase)
+  lib/
+    data.ts       Capa de datos única (elige local o Supabase)
+    localStore.ts  Backend local (localStorage) + datos de ejemplo
+    supabase.ts    Cliente de Supabase
+    types, constants, format
+  context/        AuthContext (login local o Supabase)
   components/     Layout, UI, LeadModal, ConvertirModal
   pages/          Login, Dashboard, Embudo, Alumnos
 ```
+
+> La magia del cambio local → Supabase está en `src/lib/data.ts`: todas las
+> pantallas llaman a `data.*`, y esa capa decide el backend según haya o no
+> `.env.local`. Por eso migrar no toca el resto del código.
 
 ## 🗺️ Próximas fases (ideas)
 - Portal para papás (ver su info, noticias, anuncios, fechas de corte).

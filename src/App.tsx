@@ -7,7 +7,7 @@ import Embudo from './pages/Embudo'
 import Alumnos from './pages/Alumnos'
 
 export default function App() {
-  const { session, cargando } = useAuth()
+  const { usuario, cargando } = useAuth()
 
   if (cargando) {
     return (
@@ -17,7 +17,7 @@ export default function App() {
     )
   }
 
-  if (!session) {
+  if (!usuario) {
     return (
       <Routes>
         <Route path="/login" element={<Login />} />

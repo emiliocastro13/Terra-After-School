@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { data } from '../lib/data'
 import type { EtapaEmbudo, Padre, TipoContacto } from '../lib/types'
 import { DEPORTES, ETAPAS, FUENTES, TIPOS } from '../lib/constants'
 import { Boton, Campo, inputClass, Modal } from './ui'
@@ -100,15 +100,15 @@ export default function LeadModal({
       motivo_perdida: b.etapa === 'perdido' ? b.motivo_perdida.trim() || null : null,
     }
 
-    const { error } = lead
-      ? await supabase.from('padres').update(payload).eq('id', lead.id)
-      : await supabase.from('padres').insert(payload)
-
-    setGuardando(false)
-    if (error) {
-      setError(error.message)
+    try {
+      if (lead) await data.updatePadre(lead.id, payload)
+      else await data.createPadre(payload)
+    } catch (e) {
+      setGuardando(false)
+      setError((e as Error).message)
       return
     }
+    setGuardando(false)
     onGuardado()
     onClose()
   }

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { data } from '../lib/data'
 import type { InscripcionDetalle } from '../lib/types'
 import { DEPORTES, ESTADOS_INSCRIPCION } from '../lib/constants'
 import { diasHasta, fmtFecha, fmtMoneda } from '../lib/format'
@@ -16,12 +16,12 @@ export default function Alumnos() {
   useEffect(() => {
     ;(async () => {
       setCargando(true)
-      const { data, error } = await supabase
-        .from('v_inscripciones_detalle')
-        .select('*')
-        .order('deporte', { ascending: true })
-      if (error) setError(error.message)
-      else setFilas(data as InscripcionDetalle[])
+      try {
+        setFilas(await data.listInscripcionesDetalle())
+        setError(null)
+      } catch (e) {
+        setError((e as Error).message)
+      }
       setCargando(false)
     })()
   }, [])

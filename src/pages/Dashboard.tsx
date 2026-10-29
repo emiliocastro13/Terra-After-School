@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
+import { data } from '../lib/data'
 import type { EtapaEmbudo, InscripcionDetalle, Padre } from '../lib/types'
 import { DEPORTES, ETAPAS } from '../lib/constants'
 import { diasHasta, fmtFecha } from '../lib/format'
@@ -12,12 +12,16 @@ export default function Dashboard() {
 
   useEffect(() => {
     ;(async () => {
-      const [p, i] = await Promise.all([
-        supabase.from('padres').select('*'),
-        supabase.from('v_inscripciones_detalle').select('*'),
-      ])
-      if (p.data) setPadres(p.data as Padre[])
-      if (i.data) setInscripciones(i.data as InscripcionDetalle[])
+      try {
+        const [p, i] = await Promise.all([
+          data.listPadres(),
+          data.listInscripcionesDetalle(),
+        ])
+        setPadres(p)
+        setInscripciones(i)
+      } catch {
+        // silencioso en el panel
+      }
       setCargando(false)
     })()
   }, [])

@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { supabase, supabaseConfigurado } from '../lib/supabase'
+import { useAuth } from '../context/AuthContext'
 import { Boton, Campo, inputClass } from '../components/ui'
 
 export default function Login() {
+  const { signIn, modoLocal } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -12,9 +13,9 @@ export default function Login() {
     e.preventDefault()
     setError(null)
     setCargando(true)
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { error } = await signIn(email, password)
     setCargando(false)
-    if (error) setError(error.message)
+    if (error) setError(error)
   }
 
   return (
@@ -28,10 +29,10 @@ export default function Login() {
           <p className="text-sm text-slate-400">CRM de extracurriculares</p>
         </div>
 
-        {!supabaseConfigurado && (
+        {modoLocal && (
           <div className="mb-4 rounded-lg bg-amber-50 p-3 text-xs text-amber-700">
-            Supabase no está configurado. Define <code>VITE_SUPABASE_URL</code> y{' '}
-            <code>VITE_SUPABASE_ANON_KEY</code> (ver README).
+            <strong>Modo local</strong>: los datos se guardan en este navegador (sin Supabase).
+            Entra con cualquier correo para empezar a construir y probar.
           </div>
         )}
 
@@ -42,31 +43,36 @@ export default function Login() {
               className={inputClass}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required
+              required={!modoLocal}
               autoComplete="email"
+              placeholder={modoLocal ? 'tu@correo.com (cualquiera)' : ''}
             />
           </Campo>
-          <Campo label="Contraseña">
-            <input
-              type="password"
-              className={inputClass}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-            />
-          </Campo>
+          {!modoLocal && (
+            <Campo label="Contraseña">
+              <input
+                type="password"
+                className={inputClass}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="current-password"
+              />
+            </Campo>
+          )}
 
           {error && <p className="text-sm text-rose-600">{error}</p>}
 
           <Boton type="submit" disabled={cargando} className="w-full">
-            {cargando ? 'Entrando…' : 'Entrar'}
+            {cargando ? 'Entrando…' : modoLocal ? 'Entrar (modo local)' : 'Entrar'}
           </Boton>
         </form>
 
-        <p className="mt-4 text-center text-xs text-slate-400">
-          Los usuarios se crean desde el panel de Supabase (Authentication → Users).
-        </p>
+        {!modoLocal && (
+          <p className="mt-4 text-center text-xs text-slate-400">
+            Los usuarios se crean desde el panel de Supabase (Authentication → Users).
+          </p>
+        )}
       </div>
     </div>
   )
