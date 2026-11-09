@@ -52,6 +52,13 @@ export default function Embudo() {
   const porEtapa = (etapa: EtapaEmbudo) => filtrados.filter((p) => p.etapa === etapa)
 
   const moverEtapa = async (p: Padre, etapa: EtapaEmbudo) => {
+    if (etapa === p.etapa) return
+    // "Inscrito" NO se puede marcar a mano: debe generar el alumno + la
+    // inscripción al deporte. Por eso se redirige al flujo de conversión.
+    if (etapa === 'inscrito') {
+      convertir(p)
+      return
+    }
     setPadres((prev) => prev.map((x) => (x.id === p.id ? { ...x, etapa } : x)))
     await data.updatePadre(p.id, { etapa })
   }
@@ -206,13 +213,17 @@ function LeadCard({
             <option key={et.valor} value={et.valor}>{et.label}</option>
           ))}
         </select>
-        {padre.etapa !== 'inscrito' && padre.etapa !== 'perdido' && (
+        {padre.etapa !== 'perdido' && (
           <button
             onClick={onConvertir}
             className="rounded bg-terra-600 px-2 py-1 text-xs font-medium text-white hover:bg-terra-700"
-            title="Convertir a alumno inscrito"
+            title={
+              padre.etapa === 'inscrito'
+                ? 'Agregar inscripción (otro hijo o deporte)'
+                : 'Convertir a alumno inscrito'
+            }
           >
-            Convertir
+            {padre.etapa === 'inscrito' ? '+ Inscripción' : 'Convertir'}
           </button>
         )}
       </div>
